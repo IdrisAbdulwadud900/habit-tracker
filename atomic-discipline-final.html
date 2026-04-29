@@ -716,6 +716,15 @@
             font-weight: 800;
             color: var(--accent);
             margin-bottom: 0.5rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .stat-value--name {
+            font-size: 1.4rem;
+            white-space: normal;
+            word-break: break-word;
         }
 
         .stat-label {
@@ -1260,11 +1269,11 @@
                                 <div class="stat-label">Completion Rate</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value" id="week-best-habit">-</div>
+                                <div class="stat-value stat-value--name" id="week-best-habit">-</div>
                                 <div class="stat-label">Best Habit</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value" id="week-needs-work">-</div>
+                                <div class="stat-value stat-value--name" id="week-needs-work">-</div>
                                 <div class="stat-label">Needs Work</div>
                             </div>
                         </div>
