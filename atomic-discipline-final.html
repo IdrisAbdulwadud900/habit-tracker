@@ -57,6 +57,7 @@
             height: 100%;
             overflow: hidden;
             z-index: 0;
+            pointer-events: none;
         }
 
         .welcome-bg::before {
@@ -83,11 +84,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 linear-gradient(var(--border) 1px, transparent 1px),
                 linear-gradient(90deg, var(--border) 1px, transparent 1px);
             background-size: 50px 50px;
             opacity: 0.1;
+            pointer-events: none;
         }
 
         .welcome-content {
