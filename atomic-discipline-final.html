@@ -342,6 +342,17 @@
             }
         }
 
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         .step-header {
             margin-bottom: 2.5rem;
         }
@@ -766,6 +777,11 @@
         .habit-item:hover {
             border-color: var(--accent);
             transform: translateX(5px);
+        }
+
+        .habit-paused {
+            opacity: 0.6;
+            border-style: dashed;
         }
 
         .habit-item-header {
@@ -1233,17 +1249,17 @@
 
                         <form id="reflection-form" onsubmit="saveReflection(event)">
                             <div class="reflection-prompt">
-                                <div class="reflection-question">What went well today?</div>
+                                <div class="reflection-question" id="reflect-q1">What went well today?</div>
                                 <textarea class="form-textarea" name="wins" placeholder="Which habits did you complete? What helped you succeed?"></textarea>
                             </div>
 
                             <div class="reflection-prompt">
-                                <div class="reflection-question">What didn't go as planned?</div>
+                                <div class="reflection-question" id="reflect-q2">What didn't go as planned?</div>
                                 <textarea class="form-textarea" name="challenges" placeholder="Which habits did you miss? What got in the way?"></textarea>
                             </div>
 
                             <div class="reflection-prompt">
-                                <div class="reflection-question">What will you do differently tomorrow?</div>
+                                <div class="reflection-question" id="reflect-q3">What will you do differently tomorrow?</div>
                                 <textarea class="form-textarea" name="tomorrow" placeholder="How can you make good habits easier and bad habits harder?"></textarea>
                             </div>
 
@@ -1324,6 +1340,14 @@
                             I am <strong style="color: var(--accent);" id="analytics-identity-statement">—</strong>
                         </div>
                         <div id="analytics-behaviors-list"></div>
+                    </div>
+
+                    <!-- Habit Heatmap -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">30-Day Habit Heatmap</h2>
+                        </div>
+                        <div id="analytics-heatmap"></div>
                     </div>
 
                     <div class="card">
@@ -1443,6 +1467,31 @@
                 clearTimeout(timer);
                 timer = setTimeout(() => fn.apply(this, args), delay);
             };
+        }
+
+        // Local date helper — avoids UTC timezone drift
+        function localDateStr(date) {
+            const d = date || new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        // Rotating reflection prompts
+        const REFLECTION_PROMPTS = [
+            { q1: 'What went well today?', q2: 'What didn\'t go as planned?', q3: 'What will you do differently tomorrow?' },
+            { q1: 'Which habit felt easiest today and why?', q2: 'What distraction or obstacle showed up?', q3: 'How can you remove one obstacle tomorrow?' },
+            { q1: 'Did your habits feel automatic or forced today?', q2: 'Where did your environment work against you?', q3: 'What one environment change would help most?' },
+            { q1: 'Which habit are you most proud of this week?', q2: 'What excuse did you tell yourself today?', q3: 'What\'s the smallest possible version of tomorrow\'s habits?' },
+            { q1: 'How did completing habits make you feel?', q2: 'What triggered any missed habits?', q3: 'What cue or reward could you strengthen?' },
+            { q1: 'Are your habits moving you toward who you want to be?', q2: 'What habit is feeling like a chore?', q3: 'How can you make that habit more satisfying?' },
+            { q1: 'What wins — big or small — happened today?', q2: 'What made sticking to habits difficult today?', q3: 'What\'s one thing to celebrate and one to improve?' }
+        ];
+
+        function getTodayPrompt() {
+            const dayIndex = new Date().getDay(); // 0 Sun – 6 Sat
+            return REFLECTION_PROMPTS[dayIndex];
         }
 
         // State
@@ -1634,14 +1683,21 @@
             const habit = state.habits.find(h => h.id === id);
             if (!habit) return;
 
-            const today = new Date().toISOString().slice(0, 10);
+            // Don't allow toggling paused habits
+            if (habit.pausedUntil && localDateStr() <= habit.pausedUntil) return;
+
+            const today = localDateStr();
             habit.completed = !habit.completed;
 
             if (habit.completed) {
                 if (habit.lastCompleted !== today) {
                     habit.streak++;
                     habit.lastCompleted = today;
-                    habit.history.push({ date: today, completed: true });
+                    if (!habit.history.some(e => e.date === today)) {
+                        habit.history.push({ date: today, completed: true });
+                    }
+                    // Check for milestone
+                    checkMilestone(habit);
                 }
             } else {
                 if (habit.lastCompleted === today) {
@@ -1656,6 +1712,62 @@
             render();
         }
 
+        // Milestone celebrations
+        const MILESTONES = [7, 21, 30, 100, 200, 365];
+        function checkMilestone(habit) {
+            if (MILESTONES.includes(habit.streak)) {
+                showMilestone(habit.name, habit.streak);
+            }
+        }
+
+        function showMilestone(habitName, days) {
+            const messages = {
+                7: { emoji: '🔥', title: '1 Week Streak!', msg: 'A week of consistency builds the identity.' },
+                21: { emoji: '⚡', title: '21 Days Strong!', msg: 'You\'re past the point where most people quit.' },
+                30: { emoji: '🏆', title: '30-Day Champion!', msg: 'One month. This is becoming who you are.' },
+                100: { emoji: '💎', title: '100 Days!', msg: 'Triple digits. You are the person who does this.' },
+                200: { emoji: '🚀', title: '200 Days!', msg: 'Unstoppable. This habit IS your identity now.' },
+                365: { emoji: '👑', title: 'One Full Year!', msg: 'A year of daily commitment. Extraordinary.' }
+            };
+            const m = messages[days] || { emoji: '🔥', title: `${days} Day Streak!`, msg: 'Keep the chain alive.' };
+
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s;';
+            overlay.innerHTML = `
+                <div style="background:var(--bg-secondary);border:2px solid var(--accent);border-radius:24px;padding:3rem 2.5rem;max-width:380px;text-align:center;animation:slideUp 0.4s;">
+                    <div style="font-size:4rem;margin-bottom:1rem;">${m.emoji}</div>
+                    <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--accent);margin-bottom:0.5rem;">${m.title}</div>
+                    <div style="font-size:1rem;color:var(--text-secondary);margin-bottom:0.5rem;">${escapeHtml(habitName)}</div>
+                    <div style="font-size:1.05rem;color:var(--text-primary);margin-bottom:2rem;">${m.msg}</div>
+                    <button onclick="this.closest('[style*=fixed]').remove()" style="background:var(--accent);color:#000;border:none;border-radius:12px;padding:0.9rem 2.5rem;font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">Keep Going 🔥</button>
+                </div>`;
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+        }
+
+        // Pause/Resume Habit
+        function pauseHabit(id) {
+            const habit = state.habits.find(h => h.id === id);
+            if (!habit) return;
+            const days = parseInt(prompt('Pause this habit for how many days? (1–30)', '3'), 10);
+            if (!days || days < 1 || days > 30) return;
+            const until = new Date();
+            until.setDate(until.getDate() + days - 1);
+            habit.pausedUntil = localDateStr(until);
+            saveData();
+            render();
+            showToast(`"${habit.name}" paused for ${days} day${days > 1 ? 's' : ''}.`);
+        }
+
+        function resumeHabit(id) {
+            const habit = state.habits.find(h => h.id === id);
+            if (!habit) return;
+            habit.pausedUntil = null;
+            saveData();
+            render();
+            showToast(`"${habit.name}" resumed!`);
+        }
+
         // Delete Habit
         function deleteHabit(id) {
             if (!confirm('Delete this habit?')) return;
@@ -1664,21 +1776,26 @@
             render();
         }
 
-        // Check Streak
+        // Check Streak — 80%+ completion keeps the streak alive
         function checkStreak() {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = localDateStr();
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().slice(0, 10);
+            const yesterdayStr = localDateStr(yesterday);
 
-            if (state.habits.length === 0) {
+            // Only count non-paused habits towards the threshold
+            const activeHabits = state.habits.filter(h => !h.pausedUntil || localDateStr() > h.pausedUntil);
+
+            if (activeHabits.length === 0) {
                 state.streak = 0;
                 return;
             }
 
-            const allCompletedToday = state.habits.every(h => h.lastCompleted === today);
+            const completedToday = activeHabits.filter(h => h.lastCompleted === today).length;
+            const pct = completedToday / activeHabits.length;
+            const meetsThreshold = pct >= 0.8; // 80%+ keeps streak
 
-            if (allCompletedToday) {
+            if (meetsThreshold) {
                 if (state.lastCheckDate !== today) {
                     if (state.lastCheckDate === yesterdayStr || state.lastCheckDate === null) {
                         state.streak++;
@@ -1758,28 +1875,77 @@
         function renderToday() {
             document.getElementById('today-streak').textContent = state.streak;
 
-            const today = new Date().toISOString().slice(0, 10);
-            const completed = state.habits.filter(h => h.lastCompleted === today).length;
-            const total = state.habits.length;
+            const today = localDateStr();
+            const activeHabits = state.habits.filter(h => !h.pausedUntil || today > h.pausedUntil);
+            const pausedHabits = state.habits.filter(h => h.pausedUntil && today <= h.pausedUntil);
+            const completed = activeHabits.filter(h => h.lastCompleted === today).length;
+            const total = activeHabits.length;
             const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
             document.getElementById('today-completion').textContent = `${percentage}%`;
-            document.getElementById('today-identity-score').textContent = `${percentage}%`;
+
+            // Identity Alignment = % of identity behaviors that have a matching habit
+            const behaviors = state.identity.behaviors || [];
+            let identityAlignment = 0;
+            if (behaviors.length > 0 && state.habits.length > 0) {
+                const matched = behaviors.filter(b => {
+                    const words = b.replace(/^[-•*]\s*/, '').trim().toLowerCase().split(/\s+/).filter(w => w.length >= 4);
+                    return words.some(word => state.habits.some(h => h.name.toLowerCase().includes(word)));
+                }).length;
+                identityAlignment = Math.round((matched / behaviors.length) * 100);
+            } else if (behaviors.length === 0 && state.habits.length > 0) {
+                identityAlignment = 100;
+            }
+            document.getElementById('today-identity-score').textContent = `${identityAlignment}%`;
 
             const habitsList = document.getElementById('today-habits-list');
             if (state.habits.length === 0) {
                 habitsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No habits yet. Go to "Build Habits" to start.</p></div>';
             } else {
                 const cueLabels = { time: 'Time of day', location: 'Location', event: 'After event', emotion: 'Emotion', person: 'With someone' };
-                habitsList.innerHTML = state.habits.map(h => `
-                    <div class="habit-item">
+
+                // Build 7-day date array (oldest → today)
+                const sevenDays = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    sevenDays.push(localDateStr(d));
+                }
+                const dayLabels = ['S','M','T','W','T','F','S'];
+
+                const habitHtml = state.habits.map(h => {
+                    const isPaused = h.pausedUntil && today <= h.pausedUntil;
+
+                    // 7-day mini calendar
+                    const calDots = sevenDays.map(dateStr => {
+                        const done = h.history.some(e => e.date === dateStr);
+                        const isToday = dateStr === today;
+                        const dayLabel = dayLabels[new Date(dateStr + 'T00:00:00').getDay()];
+                        let bg = done ? 'var(--accent)' : 'var(--bg-tertiary)';
+                        let border = isToday ? '2px solid var(--accent)' : '2px solid transparent';
+                        return `<div style="text-align:center;">
+                            <div style="font-size:0.6rem;color:var(--text-tertiary);margin-bottom:3px;">${dayLabel}</div>
+                            <div style="width:28px;height:28px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:${done ? '#000' : 'var(--text-tertiary)'};">${done ? '✓' : ''}</div>
+                        </div>`;
+                    }).join('');
+
+                    return `
+                    <div class="habit-item${isPaused ? ' habit-paused' : ''}">
                         <div class="habit-item-header">
                             <div style="flex: 1;">
-                                <div class="habit-name">${escapeHtml(h.name)}</div>
+                                <div class="habit-name">${escapeHtml(h.name)}${isPaused ? ' <span style="font-size:0.75rem;color:var(--text-secondary);font-weight:400;">⏸ Paused until ' + h.pausedUntil + '</span>' : ''}</div>
                                 <span class="two-minute-badge">Start: ${escapeHtml(h.twoMinute)}</span>
                             </div>
-                            <input type="checkbox" class="habit-checkbox" ${h.completed ? 'checked' : ''} onchange="toggleHabit(${h.id})" aria-label="Mark ${escapeHtml(h.name)} as complete">
+                            ${isPaused
+                                ? `<button class="btn btn-secondary btn-sm" onclick="resumeHabit(${h.id})">Resume</button>`
+                                : `<input type="checkbox" class="habit-checkbox" ${h.completed ? 'checked' : ''} onchange="toggleHabit(${h.id})" aria-label="Mark ${escapeHtml(h.name)} as complete">`
+                            }
                         </div>
+
+                        <!-- 7-day chain -->
+                        <div style="display:flex;gap:6px;justify-content:space-between;margin:0.75rem 0 0.5rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;">
+                            ${calDots}
+                        </div>
+
                         <div class="habit-details">
                             <div class="habit-detail-row">
                                 <span class="habit-detail-label">When:</span>
@@ -1801,16 +1967,23 @@
                                 <span class="habit-detail-label">Setup:</span>
                                 <span class="habit-detail-value">${escapeHtml(h.environment)}</span>
                             </div>` : ''}
-                            <div class="habit-detail-row">
-                                <span class="habit-detail-label">Streak:</span>
-                                <span class="habit-detail-value streak-indicator">${h.streak} days 🔥</span>
+                            <div class="habit-detail-row" style="justify-content:space-between;">
+                                <span>
+                                    <span class="habit-detail-label">Streak:</span>
+                                    <span class="habit-detail-value streak-indicator">${h.streak} days 🔥</span>
+                                </span>
+                                ${!isPaused ? `<button class="btn btn-secondary btn-sm" onclick="pauseHabit(${h.id})" style="font-size:0.75rem;padding:0.3rem 0.7rem;">⏸ Pause</button>` : ''}
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
+
+                habitsList.innerHTML = habitHtml;
             }
 
+            // Rotating reflection prompt
             const reflectionPrompt = document.getElementById('reflection-prompt-today');
+            const prompt = getTodayPrompt();
             if (completed === total && total > 0) {
                 reflectionPrompt.innerHTML = `
                     <div class="alert" style="background: rgba(34, 197, 94, 0.1); border-color: var(--success); color: var(--success);">
@@ -1821,7 +1994,8 @@
             } else {
                 reflectionPrompt.innerHTML = `
                     <div class="alert alert-info">
-                        Before bed, take 2 minutes to reflect.
+                        <strong>Today's reflection:</strong> ${escapeHtml(prompt.q1)}
+                        <br><span style="font-size:0.85rem;opacity:0.8;">Before bed, take 2 minutes to reflect on your day.</span>
                     </div>
                 `;
             }
@@ -1878,6 +2052,15 @@
         }
 
         function renderReflections() {
+            // Update rotating prompts in the form
+            const p = getTodayPrompt();
+            const q1el = document.getElementById('reflect-q1');
+            const q2el = document.getElementById('reflect-q2');
+            const q3el = document.getElementById('reflect-q3');
+            if (q1el) q1el.textContent = p.q1;
+            if (q2el) q2el.textContent = p.q2;
+            if (q3el) q3el.textContent = p.q3;
+
             const list = document.getElementById('past-reflections');
             if (!list) return;
 
@@ -1889,9 +2072,9 @@
                         <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">
                             ${new Date(r.date).toLocaleDateString()}
                         </div>
-                        <div style="margin-bottom: 0.5rem;"><strong>Wins:</strong> ${escapeHtml(r.wins)}</div>
-                        <div style="margin-bottom: 0.5rem;"><strong>Challenges:</strong> ${escapeHtml(r.challenges)}</div>
-                        <div><strong>Tomorrow:</strong> ${escapeHtml(r.tomorrow)}</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Wins:</strong> ${escapeHtml(r.wins || '')}</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Challenges:</strong> ${escapeHtml(r.challenges || '')}</div>
+                        <div><strong>Tomorrow:</strong> ${escapeHtml(r.tomorrow || '')}</div>
                     </div>
                 `).join('');
             }
@@ -1901,7 +2084,7 @@
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
 
-            const weekAgoStr = weekAgo.toISOString().slice(0, 10);
+            const weekAgoStr = localDateStr(weekAgo);
             const weekHabits = state.habits.map(h => {
                 const weekHistory = h.history.filter(entry => entry.date >= weekAgoStr);
                 return { name: h.name, completed: weekHistory.length };
@@ -1960,7 +2143,6 @@
                 if (behaviors.length === 0) {
                     behaviorsList.innerHTML = '<p style="color: var(--text-secondary);">No behaviors defined during onboarding.</p>';
                 } else {
-                    const cueLabels = { time: 'Time of day', location: 'Location', event: 'After event', emotion: 'Emotion', person: 'With someone' };
                     behaviorsList.innerHTML = behaviors.map(b => {
                         const clean = b.replace(/^[-•*]\s*/, '').trim();
                         const words = clean.toLowerCase().split(/\s+/).filter(w => w.length >= 4);
@@ -1973,20 +2155,72 @@
                     }).join('');
                 }
             }
+
+            // Heatmap
+            renderHeatmap();
+        }
+
+        function renderHeatmap() {
+            const el = document.getElementById('analytics-heatmap');
+            if (!el) return;
+
+            if (state.habits.length === 0) {
+                el.innerHTML = '<div class="empty-state"><p>No habits to show</p></div>';
+                return;
+            }
+
+            // Build 30-day date array
+            const days = [];
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                days.push(localDateStr(d));
+            }
+
+            const dayLabels = ['S','M','T','W','T','F','S'];
+
+            // Per habit row
+            const rows = state.habits.map(h => {
+                const cells = days.map(dateStr => {
+                    const done = h.history.some(e => e.date === dateStr);
+                    const isToday = dateStr === localDateStr();
+                    let bg = done ? 'var(--accent)' : 'var(--bg-tertiary)';
+                    let outline = isToday ? '2px solid var(--accent)' : 'none';
+                    return `<div title="${dateStr}" style="width:18px;height:18px;border-radius:4px;background:${bg};outline:${outline};flex-shrink:0;"></div>`;
+                }).join('');
+
+                return `<div style="margin-bottom:1rem;">
+                    <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.4rem;color:var(--text-secondary);">${escapeHtml(h.name)}</div>
+                    <div style="display:flex;gap:3px;flex-wrap:wrap;">${cells}</div>
+                </div>`;
+            }).join('');
+
+            // Day-of-week header (30 labels)
+            const header = days.map(d => {
+                const label = dayLabels[new Date(d + 'T00:00:00').getDay()];
+                return `<div style="width:18px;text-align:center;font-size:0.55rem;color:var(--text-tertiary);flex-shrink:0;">${label}</div>`;
+            }).join('');
+
+            el.innerHTML = `
+                <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">${header}</div>
+                ${rows}
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;font-size:0.8rem;color:var(--text-secondary);">
+                    <div style="width:14px;height:14px;border-radius:3px;background:var(--bg-tertiary);"></div> Missed
+                    <div style="width:14px;height:14px;border-radius:3px;background:var(--accent);margin-left:0.5rem;"></div> Completed
+                </div>`;
         }
 
         function checkNeverMissTwice() {
             const warning = document.getElementById('never-miss-twice-warning');
             if (!warning) return;
 
-            const today = new Date().toISOString().slice(0, 10);
+            const today = localDateStr();
             const yesterdayDate = new Date();
             yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-            const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+            const yesterdayStr = localDateStr(yesterdayDate);
 
             // Only flag habits that existed before yesterday (not brand-new ones)
             const habitsExistingYesterday = state.habits.filter(h => {
-                const created = new Date(h.createdAt).toISOString().slice(0, 10);
+                const created = localDateStr(new Date(h.createdAt));
                 return created <= yesterdayStr;
             });
 
@@ -2049,10 +2283,42 @@
             renderSpending();
         }
 
+        function editExpense(id) {
+            const ex = state.expenses.find(e => e.id === id);
+            if (!ex) return;
+            const row = document.getElementById(`expense-row-${id}`);
+            if (!row) return;
+
+            const CATS = ['Food','Transport','Shopping','Health','Entertainment','Bills','Other'];
+            const catOpts = CATS.map(c => `<option value="${c}" ${ex.category === c ? 'selected' : ''}>${c}</option>`).join('');
+
+            row.innerHTML = `
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;padding:0.9rem 0;border-bottom:1px solid var(--border);">
+                    <input type="number" id="edit-amt-${id}" value="${ex.amount}" min="0.01" step="0.01" class="form-input" style="width:90px;">
+                    <select id="edit-cat-${id}" class="form-select" style="flex:1;min-width:120px;">${catOpts}</select>
+                    <input type="text" id="edit-desc-${id}" value="${escapeHtml(ex.description)}" class="form-input" style="flex:2;min-width:120px;" placeholder="Description">
+                    <button class="btn btn-primary btn-sm" onclick="saveExpenseEdit(${id})">Save</button>
+                    <button class="btn btn-secondary btn-sm" onclick="renderSpending()">Cancel</button>
+                </div>`;
+        }
+
+        function saveExpenseEdit(id) {
+            const ex = state.expenses.find(e => e.id === id);
+            if (!ex) return;
+            const amt = parseFloat(document.getElementById(`edit-amt-${id}`).value);
+            if (isNaN(amt) || amt <= 0) { showToast('Enter a valid amount.'); return; }
+            ex.amount = amt;
+            ex.category = document.getElementById(`edit-cat-${id}`).value;
+            ex.description = document.getElementById(`edit-desc-${id}`).value.trim();
+            saveData();
+            renderSpending();
+            showToast('Expense updated!');
+        }
+
         function renderSpending() {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = localDateStr();
             const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
-            const weekAgoStr = weekAgo.toISOString().slice(0, 10);
+            const weekAgoStr = localDateStr(weekAgo);
             const monthStart = new Date().toISOString().slice(0, 7); // YYYY-MM
 
             const todayExpenses = state.expenses.filter(ex => ex.date === today);
@@ -2102,13 +2368,16 @@
                 todayList.innerHTML = '<div class="empty-state"><div class="empty-icon">💳</div><p>No expenses logged today</p></div>';
             } else {
                 todayList.innerHTML = todayExpenses.slice().reverse().map(ex => `
-                    <div style="display:flex; align-items:center; gap:1rem; padding:0.9rem 0; border-bottom:1px solid var(--border);">
-                        <div style="flex:1;">
-                            <div style="font-weight:600;">${escapeHtml(ex.category)}${ex.description ? ' — ' + escapeHtml(ex.description) : ''}</div>
-                            <div style="font-size:0.8rem; color:var(--text-secondary);">${ex.time}</div>
+                    <div id="expense-row-${ex.id}">
+                        <div style="display:flex; align-items:center; gap:0.75rem; padding:0.9rem 0; border-bottom:1px solid var(--border);">
+                            <div style="flex:1;">
+                                <div style="font-weight:600;">${escapeHtml(ex.category)}${ex.description ? ' — ' + escapeHtml(ex.description) : ''}</div>
+                                <div style="font-size:0.8rem; color:var(--text-secondary);">${ex.time}</div>
+                            </div>
+                            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; color:var(--accent);">$${ex.amount.toFixed(2)}</div>
+                            <button class="btn btn-secondary btn-sm" onclick="editExpense(${ex.id})" aria-label="Edit expense" style="padding:0.3rem 0.6rem;">✏️</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteExpense(${ex.id})" aria-label="Delete expense">×</button>
                         </div>
-                        <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; color:var(--accent);">$${ex.amount.toFixed(2)}</div>
-                        <button class="btn btn-danger btn-sm" onclick="deleteExpense(${ex.id})" aria-label="Delete expense">×</button>
                     </div>
                 `).join('');
             }
@@ -2214,13 +2483,14 @@
                     return;
                 }
 
-                const today = new Date().toISOString().slice(0, 10);
+                const today = localDateStr();
                 state.habits.forEach(h => {
                     if (!h.history) h.history = [];
                     if (!h.createdAt) h.createdAt = new Date().toISOString();
+                    if (h.pausedUntil === undefined) h.pausedUntil = null;
                     // Normalise legacy toDateString() lastCompleted to ISO date
                     if (h.lastCompleted && h.lastCompleted.length > 10) {
-                        h.lastCompleted = new Date(h.lastCompleted).toISOString().slice(0, 10);
+                        h.lastCompleted = localDateStr(new Date(h.lastCompleted));
                     }
                     if (h.lastCompleted !== today) {
                         h.completed = false;
@@ -2228,7 +2498,7 @@
                     // Normalise legacy history entry dates
                     h.history = h.history.map(entry => ({
                         date: entry.date && entry.date.length > 10
-                            ? new Date(entry.date).toISOString().slice(0, 10)
+                            ? localDateStr(new Date(entry.date))
                             : entry.date,
                         completed: true
                     }));
