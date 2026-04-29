@@ -1099,6 +1099,7 @@
                 <button class="nav-tab" onclick="switchView('reflection', this)">Reflection</button>
                 <button class="nav-tab" onclick="switchView('review', this)">Weekly Review</button>
                 <button class="nav-tab" onclick="switchView('analytics', this)">Analytics</button>
+                <button class="nav-tab" onclick="switchView('spending', this)">💰 Spending</button>
             </nav>
 
             <main>
@@ -1317,6 +1318,16 @@
 
                     <div class="card">
                         <div class="card-header">
+                            <h2 class="card-title">Your Identity Blueprint</h2>
+                        </div>
+                        <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
+                            I am <strong style="color: var(--accent);" id="analytics-identity-statement">—</strong>
+                        </div>
+                        <div id="analytics-behaviors-list"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
                             <h2 class="card-title">Export Your Data</h2>
                         </div>
                         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -1326,6 +1337,100 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Spending Tracker View -->
+                <div id="spending" class="view">
+                    <!-- Daily Summary Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="spending-today-total">$0</div>
+                            <div class="stat-label">Spent Today</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="spending-budget-left">$0</div>
+                            <div class="stat-label">Budget Left</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="spending-week-total">$0</div>
+                            <div class="stat-label">This Week</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="spending-month-total">$0</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+
+                    <!-- Budget Setup -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Daily Budget</h2>
+                        </div>
+                        <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+                            <span style="color:var(--text-secondary);">Set daily limit: $</span>
+                            <input type="number" id="spending-budget-input" class="form-input" min="0" step="0.01" placeholder="e.g. 50" style="max-width:160px;">
+                            <button class="btn btn-primary btn-sm" onclick="saveDailyBudget()">Save Budget</button>
+                        </div>
+                        <div id="spending-budget-bar-wrap" style="margin-top:1.25rem; display:none;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.4rem;">
+                                <span>Daily usage</span>
+                                <span id="spending-budget-pct">0%</span>
+                            </div>
+                            <div style="background:var(--bg-tertiary); border-radius:999px; height:10px; overflow:hidden;">
+                                <div id="spending-budget-bar" style="height:100%; border-radius:999px; background:var(--success); width:0%; transition:width 0.4s, background 0.4s;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Expense -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Log Expense</h2>
+                        </div>
+                        <form id="spending-form" onsubmit="addExpense(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Amount ($)</label>
+                                    <input type="number" class="form-input" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-select" name="category" required>
+                                        <option value="">Select category...</option>
+                                        <option value="Food">🍔 Food</option>
+                                        <option value="Transport">🚗 Transport</option>
+                                        <option value="Shopping">🛍️ Shopping</option>
+                                        <option value="Health">💊 Health</option>
+                                        <option value="Entertainment">🎬 Entertainment</option>
+                                        <option value="Bills">📄 Bills</option>
+                                        <option value="Other">📦 Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-input" name="description" placeholder="Coffee, Uber, Groceries...">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Add Expense</button>
+                        </form>
+                    </div>
+
+                    <!-- Today's Expenses -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Today's Expenses</h2>
+                        </div>
+                        <div id="spending-today-list"></div>
+                    </div>
+
+                    <!-- Spending by Category (this week) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">This Week by Category</h2>
+                        </div>
+                        <div id="spending-category-breakdown"></div>
+                    </div>
+                </div>
+
             </main>
         </div>
     </div>
@@ -1350,7 +1455,9 @@
             reviews: [],
             streak: 0,
             bestStreak: 0,
-            lastCheckDate: null
+            lastCheckDate: null,
+            expenses: [],
+            dailyBudget: 0
         };
 
         let onboardingStep = 1;
@@ -1644,6 +1751,7 @@
             renderReview();
             renderAnalytics();
             renderCurrentHabitsAudit();
+            renderSpending();
             checkNeverMissTwice();
         }
 
@@ -1662,6 +1770,7 @@
             if (state.habits.length === 0) {
                 habitsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No habits yet. Go to "Build Habits" to start.</p></div>';
             } else {
+                const cueLabels = { time: 'Time of day', location: 'Location', event: 'After event', emotion: 'Emotion', person: 'With someone' };
                 habitsList.innerHTML = state.habits.map(h => `
                     <div class="habit-item">
                         <div class="habit-item-header">
@@ -1676,13 +1785,25 @@
                                 <span class="habit-detail-label">When:</span>
                                 <span class="habit-detail-value">${h.time} at ${escapeHtml(h.location)}</span>
                             </div>
-                            <div class="habit-detail-row">
-                                <span class="habit-detail-label">After:</span>
-                                <span class="habit-detail-value">${escapeHtml(h.stack || 'No habit stack')}</span>
-                            </div>
+                            ${h.cue ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Cue:</span>
+                                <span class="habit-detail-value">${cueLabels[h.cue] || escapeHtml(h.cue)}</span>
+                            </div>` : ''}
+                            ${h.stack ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Stack:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.stack)}</span>
+                            </div>` : ''}
+                            ${h.reward ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Reward:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.reward)}</span>
+                            </div>` : ''}
+                            ${h.environment ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Setup:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.environment)}</span>
+                            </div>` : ''}
                             <div class="habit-detail-row">
                                 <span class="habit-detail-label">Streak:</span>
-                                <span class="habit-detail-value streak-indicator">${h.streak} days</span>
+                                <span class="habit-detail-value streak-indicator">${h.streak} days 🔥</span>
                             </div>
                         </div>
                     </div>
@@ -1711,6 +1832,7 @@
             if (state.habits.length === 0) {
                 list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No habits yet</p></div>';
             } else {
+                const cueLabels = { time: 'Time of day', location: 'Location', event: 'After event', emotion: 'Emotion', person: 'With someone' };
                 list.innerHTML = state.habits.map(h => `
                     <div class="habit-item">
                         <div class="habit-item-header">
@@ -1729,13 +1851,25 @@
                                 <span class="habit-detail-label">When & Where:</span>
                                 <span class="habit-detail-value">${h.time} at ${escapeHtml(h.location)}</span>
                             </div>
-                            <div class="habit-detail-row">
+                            ${h.cue ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Cue:</span>
+                                <span class="habit-detail-value">${cueLabels[h.cue] || escapeHtml(h.cue)}</span>
+                            </div>` : ''}
+                            ${h.stack ? `<div class="habit-detail-row">
                                 <span class="habit-detail-label">Stack:</span>
                                 <span class="habit-detail-value">${escapeHtml(h.stack)}</span>
-                            </div>
+                            </div>` : ''}
+                            ${h.reward ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Reward:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.reward)}</span>
+                            </div>` : ''}
+                            ${h.environment ? `<div class="habit-detail-row">
+                                <span class="habit-detail-label">Setup:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.environment)}</span>
+                            </div>` : ''}
                             <div class="habit-detail-row">
                                 <span class="habit-detail-label">Streak:</span>
-                                <span class="habit-detail-value streak-indicator">${h.streak} days</span>
+                                <span class="habit-detail-value streak-indicator">${h.streak} days 🔥</span>
                             </div>
                         </div>
                     </div>
@@ -1800,19 +1934,45 @@
             document.getElementById('analytics-rate').textContent = `${rate}%`;
 
             // Identity match: % of identity behaviors that have a corresponding habit
+            // Match by checking if any meaningful word (4+ chars) from the behavior appears in a habit name
             const behaviors = state.identity.behaviors || [];
             let identityMatch = 0;
-            if (behaviors.length > 0) {
-                const matched = behaviors.filter(b =>
-                    state.habits.some(h =>
-                        h.name.toLowerCase().includes(b.replace(/^[-•*]\s*/, '').trim().toLowerCase().slice(0, 6))
-                    )
-                ).length;
+            if (behaviors.length > 0 && state.habits.length > 0) {
+                const matched = behaviors.filter(b => {
+                    const cleanBehavior = b.replace(/^[-•*]\s*/, '').trim().toLowerCase();
+                    const words = cleanBehavior.split(/\s+/).filter(w => w.length >= 4);
+                    return words.some(word =>
+                        state.habits.some(h => h.name.toLowerCase().includes(word))
+                    );
+                }).length;
                 identityMatch = Math.round((matched / behaviors.length) * 100);
-            } else if (state.habits.length > 0) {
+            } else if (behaviors.length === 0 && state.habits.length > 0) {
                 identityMatch = 100;
             }
             document.getElementById('analytics-identity').textContent = `${identityMatch}%`;
+
+            // Identity blueprint panel
+            const stmtEl = document.getElementById('analytics-identity-statement');
+            if (stmtEl) stmtEl.textContent = state.identity.statement || '—';
+
+            const behaviorsList = document.getElementById('analytics-behaviors-list');
+            if (behaviorsList) {
+                if (behaviors.length === 0) {
+                    behaviorsList.innerHTML = '<p style="color: var(--text-secondary);">No behaviors defined during onboarding.</p>';
+                } else {
+                    const cueLabels = { time: 'Time of day', location: 'Location', event: 'After event', emotion: 'Emotion', person: 'With someone' };
+                    behaviorsList.innerHTML = behaviors.map(b => {
+                        const clean = b.replace(/^[-•*]\s*/, '').trim();
+                        const words = clean.toLowerCase().split(/\s+/).filter(w => w.length >= 4);
+                        const matched = state.habits.some(h => words.some(word => h.name.toLowerCase().includes(word)));
+                        return `<div style="display:flex; align-items:center; gap:0.75rem; padding:0.75rem 0; border-bottom:1px solid var(--border);">
+                            <span style="font-size:1.2rem;">${matched ? '✅' : '⬜'}</span>
+                            <span style="flex:1; color:${matched ? 'var(--text-primary)' : 'var(--text-secondary)'};">${escapeHtml(clean)}</span>
+                            ${matched ? '<span style="font-size:0.8rem;color:var(--success);font-weight:700;">HABIT BUILT</span>' : '<span style="font-size:0.8rem;color:var(--text-tertiary);font-weight:700;">NO HABIT YET</span>'}
+                        </div>`;
+                    }).join('');
+                }
+            }
         }
 
         function checkNeverMissTwice() {
@@ -1849,6 +2009,132 @@
                 `;
             } else {
                 warning.innerHTML = '';
+            }
+        }
+
+        // ── Spending Tracker ──────────────────────────────────────────
+        function saveDailyBudget() {
+            const val = parseFloat(document.getElementById('spending-budget-input').value);
+            if (isNaN(val) || val < 0) return;
+            state.dailyBudget = val;
+            saveData();
+            renderSpending();
+            showToast('Daily budget saved!');
+        }
+
+        function addExpense(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const amount = parseFloat(formData.get('amount'));
+            if (isNaN(amount) || amount <= 0) return;
+
+            state.expenses.push({
+                id: Date.now(),
+                amount,
+                category: formData.get('category'),
+                description: formData.get('description') || '',
+                date: new Date().toISOString().slice(0, 10),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            e.target.reset();
+            saveData();
+            renderSpending();
+            showToast('Expense logged!');
+        }
+
+        function deleteExpense(id) {
+            state.expenses = state.expenses.filter(ex => ex.id !== id);
+            saveData();
+            renderSpending();
+        }
+
+        function renderSpending() {
+            const today = new Date().toISOString().slice(0, 10);
+            const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekAgoStr = weekAgo.toISOString().slice(0, 10);
+            const monthStart = new Date().toISOString().slice(0, 7); // YYYY-MM
+
+            const todayExpenses = state.expenses.filter(ex => ex.date === today);
+            const weekExpenses  = state.expenses.filter(ex => ex.date >= weekAgoStr);
+            const monthExpenses = state.expenses.filter(ex => ex.date.startsWith(monthStart));
+
+            const todayTotal = todayExpenses.reduce((s, ex) => s + ex.amount, 0);
+            const weekTotal  = weekExpenses.reduce((s, ex) => s + ex.amount, 0);
+            const monthTotal = monthExpenses.reduce((s, ex) => s + ex.amount, 0);
+            const budgetLeft = Math.max(0, state.dailyBudget - todayTotal);
+
+            document.getElementById('spending-today-total').textContent = `$${todayTotal.toFixed(2)}`;
+            document.getElementById('spending-week-total').textContent  = `$${weekTotal.toFixed(2)}`;
+            document.getElementById('spending-month-total').textContent = `$${monthTotal.toFixed(2)}`;
+
+            const budgetEl = document.getElementById('spending-budget-left');
+            if (state.dailyBudget > 0) {
+                budgetEl.textContent = `$${budgetLeft.toFixed(2)}`;
+                budgetEl.style.color = budgetLeft === 0 ? 'var(--danger)' : budgetLeft < state.dailyBudget * 0.2 ? 'var(--accent)' : 'var(--success)';
+            } else {
+                budgetEl.textContent = '—';
+                budgetEl.style.color = '';
+            }
+
+            // Pre-fill budget input if set
+            const budgetInput = document.getElementById('spending-budget-input');
+            if (budgetInput && state.dailyBudget > 0 && !budgetInput.value) {
+                budgetInput.value = state.dailyBudget;
+            }
+
+            // Budget progress bar
+            const barWrap = document.getElementById('spending-budget-bar-wrap');
+            if (state.dailyBudget > 0) {
+                barWrap.style.display = 'block';
+                const pct = Math.min(100, Math.round((todayTotal / state.dailyBudget) * 100));
+                document.getElementById('spending-budget-pct').textContent = `${pct}%`;
+                const bar = document.getElementById('spending-budget-bar');
+                bar.style.width = `${pct}%`;
+                bar.style.background = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--accent)' : 'var(--success)';
+            } else {
+                barWrap.style.display = 'none';
+            }
+
+            // Today's expense list
+            const todayList = document.getElementById('spending-today-list');
+            if (todayExpenses.length === 0) {
+                todayList.innerHTML = '<div class="empty-state"><div class="empty-icon">💳</div><p>No expenses logged today</p></div>';
+            } else {
+                todayList.innerHTML = todayExpenses.slice().reverse().map(ex => `
+                    <div style="display:flex; align-items:center; gap:1rem; padding:0.9rem 0; border-bottom:1px solid var(--border);">
+                        <div style="flex:1;">
+                            <div style="font-weight:600;">${escapeHtml(ex.category)}${ex.description ? ' — ' + escapeHtml(ex.description) : ''}</div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary);">${ex.time}</div>
+                        </div>
+                        <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; color:var(--accent);">$${ex.amount.toFixed(2)}</div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteExpense(${ex.id})" aria-label="Delete expense">×</button>
+                    </div>
+                `).join('');
+            }
+
+            // Category breakdown (this week)
+            const catEl = document.getElementById('spending-category-breakdown');
+            const catMap = {};
+            weekExpenses.forEach(ex => { catMap[ex.category] = (catMap[ex.category] || 0) + ex.amount; });
+            const cats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+            if (cats.length === 0) {
+                catEl.innerHTML = '<div class="empty-state"><p>No expenses this week</p></div>';
+            } else {
+                const maxAmt = cats[0][1];
+                catEl.innerHTML = cats.map(([cat, amt]) => {
+                    const pct = Math.round((amt / weekTotal) * 100);
+                    const barW = Math.round((amt / maxAmt) * 100);
+                    return `<div style="margin-bottom:1rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+                            <span style="font-weight:600;">${escapeHtml(cat)}</span>
+                            <span style="color:var(--accent); font-weight:700;">$${amt.toFixed(2)} <span style="color:var(--text-secondary); font-size:0.85rem;">(${pct}%)</span></span>
+                        </div>
+                        <div style="background:var(--bg-tertiary); border-radius:999px; height:8px; overflow:hidden;">
+                            <div style="height:100%; border-radius:999px; background:var(--accent); width:${barW}%; transition:width 0.4s;"></div>
+                        </div>
+                    </div>`;
+                }).join('');
             }
         }
 
@@ -1920,6 +2206,8 @@
                     state.currentHabits = Array.isArray(parsed.currentHabits) ? parsed.currentHabits : [];
                     state.reflections = Array.isArray(parsed.reflections) ? parsed.reflections : [];
                     state.reviews = Array.isArray(parsed.reviews) ? parsed.reviews : [];
+                    state.expenses = Array.isArray(parsed.expenses) ? parsed.expenses : [];
+                    state.dailyBudget = typeof parsed.dailyBudget === 'number' ? parsed.dailyBudget : 0;
                 } catch (e) {
                     console.warn('Corrupted data in localStorage, starting fresh.', e);
                     localStorage.removeItem('atomicDisciplineData');
