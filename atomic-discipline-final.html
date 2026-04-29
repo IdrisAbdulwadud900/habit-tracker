@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atomic Discipline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1e1e1e;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a8a8a8;
+            --text-tertiary: #6b6b6b;
+            --accent: #fbbf24;
+            --accent-dim: rgba(251, 191, 36, 0.1);
+            --accent-bright: #fcd34d;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --border: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Welcome Screen Styles */
+        #welcome-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background */
+        .welcome-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .welcome-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 30% 40%, var(--accent-dim), transparent 40%),
+                radial-gradient(circle at 70% 60%, rgba(59, 130, 246, 0.05), transparent 40%);
+            animation: bgRotate 20s linear infinite;
+        }
+
+        @keyframes bgRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.1;
+        }
+
+        .welcome-content {
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-bright));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.5;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 1.25rem 3rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 10px 40px rgba(251, 191, 36, 0.3);
+            animation: fadeInUp 0.8s ease-out 0.5s both, pulse 2s ease-in-out 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(251, 191, 36, 0.4);
+        }
+
+        .hero-cta:active {
+            transform: translateY(-1px);
+        }
+
+        .arrow-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .hero-cta:hover .arrow-icon {
+            transform: translateX(5px);
+        }
+
+        /* Features Grid */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .feature-card:nth-child(1) { animation-delay: 0.6s; }
+        .feature-card:nth-child(2) { animation-delay: 0.7s; }
+        .feature-card:nth-child(3) { animation-delay: 0.8s; }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Onboarding Steps */
+        .onboarding-container {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .onboarding-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .progress-bar-container {
+            margin-bottom: 3rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+        }
+
+        .progress-step {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+            transform: scale(1.2);
+        }
+
+        .progress-step.completed {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .onboarding-step {
+            display: none;
+        }
+
+        .onboarding-step.active {
+            display: block;
+            animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .step-number {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+        }
+
+        .step-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .form-help {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Work Sans', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-dim);
+            background: var(--bg-secondary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.6;
+        }
+
+        .identity-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .identity-prefix {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Syne', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .onboarding-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 2px solid;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+
+        /* Current Habits List */
+        .audit-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 80px;
+            gap: 1rem;
+            align-items: center;
+            padding: 1.25rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .audit-item:hover {
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .score-select {
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .score-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .audit-item {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .onboarding-nav {
+                flex-direction: column;
+            }
+
+            .identity-input-wrapper {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Main App Styles (abbreviated - keeping existing styles) */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .identity-badge {
+            background: var(--bg-tertiary);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .identity-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            padding: 0.75rem;
+            border-radius: 16px;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            padding: 0.85rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: 'Syne', sans-serif;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-tab.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Card Headers */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Habit Items */
+        .habit-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            transition: all 0.3s;
+        }
+
+        .habit-item:hover {
+            border-color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        .habit-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .habit-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .habit-checkbox {
+            appearance: none;
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .habit-checkbox:checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .habit-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .two-minute-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .habit-details {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .habit-detail-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .habit-detail-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            min-width: 100px;
+            font-weight: 700;
+        }
+
+        .habit-detail-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .streak-indicator {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        /* Miss Warning */
+        .miss-warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .miss-warning-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--danger);
+            margin-bottom: 0.75rem;
+        }
+
+        /* Reflection */
+        .reflection-prompt {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            border-radius: 8px;
+        }
+
+        .reflection-question {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.9rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .habit-identity {
+            background: var(--accent-dim);
+            color: var(--accent);
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.25rem 1.75rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            animation: slideIn 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <div class="welcome-bg">
+            <div class="grid-overlay"></div>
+        </div>
+
+        <!-- Landing Page -->
+        <div class="welcome-content" id="landing-page">
+            <div class="hero">
+                <div class="hero-badge">Atomic Habits System</div>
+                <h1 class="hero-title">Build Habits<br>That Last</h1>
+                <p class="hero-subtitle">
+                    Stop setting goals. Start building identity. This is the system that makes tiny changes become remarkable results.
+                </p>
+                <button class="hero-cta" onclick="showOnboarding()">
+                    Begin Your Transformation
+                    <span class="arrow-icon">→</span>
+                </button>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3 class="feature-title">Identity First</h3>
+                    <p class="feature-desc">
+                        Don't track what you do. Become who you want to be. Every habit reinforces your desired identity.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3 class="feature-title">2-Minute Rule</h3>
+                    <p class="feature-desc">
+                        Scale down until it's impossible to fail. Starting is the hardest part—we make it absurdly easy.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔗</span>
+                    <h3 class="feature-title">Habit Stacking</h3>
+                    <p class="feature-desc">
+                        Link new behaviors to existing ones. Your current habits become the triggers for new growth.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onboarding Steps -->
+        <div class="onboarding-container" id="onboarding">
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress-steps">
+                    <div class="progress-line" id="progress-line" style="width: 0%;"></div>
+                    <div class="progress-step active" id="step-indicator-1">1</div>
+                    <div class="progress-step" id="step-indicator-2">2</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Identity -->
+            <div class="onboarding-step active" data-step="1">
+                <div class="step-header">
+                    <div class="step-number">Step 1 of 2</div>
+                    <h2 class="step-title">Who do you want to become?</h2>
+                    <p class="step-subtitle">
+                        Every action you take is a vote for the type of person you wish to become. Your habits shape your identity—and your identity shapes your habits.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">Complete this statement:</label>
+                        <div class="identity-input-wrapper">
+                            <span class="identity-prefix">I am</span>
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                id="identity-statement" 
+                                placeholder="a disciplined person who honors commitments..."
+                                style="flex: 1;"
+                            >
+                        </div>
+                        <p class="form-help">
+                            Examples: "someone who shows up every day" · "a person who finishes what they start" · "organized and in control"
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">What does this person do every day? (3-5 behaviors)</label>
+                        <textarea 
+                            class="form-textarea" 
+                            id="identity-behaviors" 
+                            placeholder="- Works out first thing in the morning&#10;- Reads for 30 minutes before bed&#10;- Plans tomorrow's tasks every evening&#10;- Meditates after coffee"
+                        ></textarea>
+                        <p class="form-help">
+                            Be specific. These behaviors prove your identity to yourself.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="onboarding-nav">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="nextOnboardingStep()">
+                        Continue →
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Current Habits Audit -->
+            <div class="onboarding-step" data-step="2">
+                <div class="step-header">
+                    <div class="step-number">Step 2 of 2</div>
+                    <h2 class="step-title">Audit your current reality</h2>
+                    <p class="step-subtitle">
+                        Awareness comes before desire. List everything you currently do in a day. Then score each habit based on whether it helps you become who you want to be.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <div class="alert alert-info">
+                        <strong>The Habits Scorecard:</strong><br>
+                        <strong>+ Good</strong> — Reinforces your desired identity<br>
+                        <strong>= Neutral</strong> — Neither helps nor hurts<br>
+                        <strong>- Bad</strong> — Works against who you want to become
+                    </div>
+
+                    <div id="current-habits-list"></div>
+
+                    <div class="form-group" style="margin-top: 1.5rem;">
+                        <div style="display: flex; gap: 0.75rem;">
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                id="current-habit-input" 
+                                placeholder="Wake up, check phone, make coffee, exercise..."
+                                style="flex: 1;"
+                            >
+                            <button class="btn btn-primary" onclick="addCurrentHabit()">Add</button>
+                        </div>
+                        <p class="form-help">
+                            Be honest. No one is judging. This audit is for your eyes only.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="onboarding-nav">
+                    <button class="btn btn-secondary" onclick="prevOnboardingStep()">← Back</button>
+                    <button class="btn btn-primary" onclick="completeOnboarding()">Start Building →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app" style="display: none;">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">ATOMIC DISCIPLINE</div>
+                    <div class="identity-badge">
+                        <div class="identity-label">I am...</div>
+                        <div id="header-identity" style="font-weight: 600;"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <nav class="nav-tabs">
+                <button class="nav-tab active" onclick="switchView('today')">Today</button>
+                <button class="nav-tab" onclick="switchView('habits')">Build Habits</button>
+                <button class="nav-tab" onclick="switchView('audit')">Habits Audit</button>
+                <button class="nav-tab" onclick="switchView('reflection')">Reflection</button>
+                <button class="nav-tab" onclick="switchView('review')">Weekly Review</button>
+                <button class="nav-tab" onclick="switchView('analytics')">Analytics</button>
+            </nav>
+
+            <main>
+                <!-- Today View -->
+                <div id="today" class="view active">
+                    <div id="never-miss-twice-warning"></div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="today-streak">0</div>
+                            <div class="stat-label">Current Streak</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="today-completion">0%</div>
+                            <div class="stat-label">Habits Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="today-identity-score">0%</div>
+                            <div class="stat-label">Identity Alignment</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h2 class="card-title">Today's Habits</h2>
+                                <p class="card-subtitle">Every completion is a vote for your identity</p>
+                            </div>
+                        </div>
+                        <div id="today-habits-list"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">End of Day Reflection</h2>
+                        </div>
+                        <div id="reflection-prompt-today"></div>
+                    </div>
+                </div>
+
+                <!-- Build Habits View -->
+                <div id="habits" class="view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Build a New Habit</h2>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Implementation Intention:</strong> Research shows people who make a specific plan for when and where they will perform a new habit are 2-3x more likely to follow through.
+                        </div>
+
+                        <form id="habit-form" onsubmit="addHabit(event)">
+                            <div class="form-group">
+                                <label class="form-label">What habit supports your identity?</label>
+                                <input type="text" class="form-input" name="name" placeholder="Meditate, Exercise, Read, Write" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">What's the 2-minute version?</label>
+                                <input type="text" class="form-input" name="twoMinute" placeholder="Put on workout clothes, Open book to page one, Sit on meditation cushion" required>
+                                <p class="form-help">Make it so easy you can't say no. You can do more, but this is the minimum.</p>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">When will you do it?</label>
+                                    <input type="time" class="form-input" name="time" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Where will you do it?</label>
+                                    <input type="text" class="form-input" name="location" placeholder="Kitchen, Gym, Bedroom" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">What's the cue?</label>
+                                <select class="form-select" name="cue" required>
+                                    <option value="">Select trigger...</option>
+                                    <option value="time">Time of day</option>
+                                    <option value="location">Entering a location</option>
+                                    <option value="event">After another event</option>
+                                    <option value="emotion">Emotional state</option>
+                                    <option value="person">Being with someone</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Stack it: After I ___, I will ___</label>
+                                <input type="text" class="form-input" name="stack" placeholder="After I pour my coffee, I will meditate for 2 minutes">
+                                <p class="form-help">Link new habits to existing ones.</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">What's the immediate reward?</label>
+                                <input type="text" class="form-input" name="reward" placeholder="Feel energized, Mark it done, Enjoy coffee">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Environment Setup (Optional)</label>
+                                <textarea class="form-textarea" name="environment" placeholder="Put workout clothes on bed, Leave book on pillow, Set meditation timer"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Create Habit</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Your Atomic Habits</h2>
+                        </div>
+                        <div id="habits-list"></div>
+                    </div>
+                </div>
+
+                <!-- Habits Audit View -->
+                <div id="audit" class="view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Current Habits Scorecard</h2>
+                        </div>
+                        <div id="audit-list"></div>
+                    </div>
+                </div>
+
+                <!-- Daily Reflection View -->
+                <div id="reflection" class="view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Daily Reflection</h2>
+                        </div>
+
+                        <form id="reflection-form" onsubmit="saveReflection(event)">
+                            <div class="reflection-prompt">
+                                <div class="reflection-question">What went well today?</div>
+                                <textarea class="form-textarea" name="wins" placeholder="Which habits did you complete? What helped you succeed?"></textarea>
+                            </div>
+
+                            <div class="reflection-prompt">
+                                <div class="reflection-question">What didn't go as planned?</div>
+                                <textarea class="form-textarea" name="challenges" placeholder="Which habits did you miss? What got in the way?"></textarea>
+                            </div>
+
+                            <div class="reflection-prompt">
+                                <div class="reflection-question">What will you do differently tomorrow?</div>
+                                <textarea class="form-textarea" name="tomorrow" placeholder="How can you make good habits easier and bad habits harder?"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Save Reflection</button>
+                        </form>
+
+                        <div style="margin-top: 2rem;">
+                            <h3 style="margin-bottom: 1rem; font-family: 'Syne', sans-serif;">Past Reflections</h3>
+                            <div id="past-reflections"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Review View -->
+                <div id="review" class="view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Weekly Review</h2>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="week-completion">0%</div>
+                                <div class="stat-label">Completion Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="week-best-habit">-</div>
+                                <div class="stat-label">Best Habit</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="week-needs-work">-</div>
+                                <div class="stat-label">Needs Work</div>
+                            </div>
+                        </div>
+
+                        <form id="review-form" onsubmit="saveReview(event)">
+                            <div class="reflection-prompt">
+                                <div class="reflection-question">What patterns did you notice?</div>
+                                <textarea class="form-textarea" name="patterns" placeholder="When did you succeed? When did you struggle?"></textarea>
+                            </div>
+
+                            <div class="reflection-prompt">
+                                <div class="reflection-question">What adjustments will you make?</div>
+                                <textarea class="form-textarea" name="adjustments" placeholder="Change timing? Different location? Scale back or level up?"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Save Review</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Analytics View -->
+                <div id="analytics" class="view">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-streak">0</div>
+                            <div class="stat-label">Best Streak</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-rate">0%</div>
+                            <div class="stat-label">Overall Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-habits">0</div>
+                            <div class="stat-label">Active Habits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="analytics-identity">0%</div>
+                            <div class="stat-label">Identity Match</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Export Your Data</h2>
+                        </div>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="exportData('json')">Export JSON</button>
+                            <button class="btn btn-secondary" onclick="exportData('csv')">Export CSV</button>
+                            <button class="btn btn-danger" onclick="resetAll()">Reset All</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let state = {
+            onboardingComplete: false,
+            identity: { statement: '', behaviors: [] },
+            currentHabits: [],
+            habits: [],
+            reflections: [],
+            reviews: [],
+            streak: 0,
+            bestStreak: 0,
+            lastCheckDate: null
+        };
+
+        let onboardingStep = 1;
+
+        // Initialize
+        function init() {
+            loadData();
+            if (state.onboardingComplete) {
+                showMainApp();
+            }
+            render();
+        }
+
+        // Welcome Screen
+        function showOnboarding() {
+            document.getElementById('landing-page').style.display = 'none';
+            document.getElementById('onboarding').classList.add('active');
+        }
+
+        // Onboarding
+        function nextOnboardingStep() {
+            if (onboardingStep === 1) {
+                const statement = document.getElementById('identity-statement').value.trim();
+                const behaviors = document.getElementById('identity-behaviors').value.trim();
+                
+                if (!statement || !behaviors) {
+                    alert('Please complete both fields');
+                    return;
+                }
+
+                state.identity.statement = statement;
+                state.identity.behaviors = behaviors.split('\n').filter(b => b.trim());
+                saveData();
+
+                // Update progress
+                document.getElementById('step-indicator-1').classList.add('completed');
+                document.getElementById('step-indicator-1').classList.remove('active');
+                document.getElementById('step-indicator-2').classList.add('active');
+                document.getElementById('progress-line').style.width = '100%';
+            }
+
+            document.querySelector(`.onboarding-step[data-step="${onboardingStep}"]`).classList.remove('active');
+            onboardingStep++;
+            document.querySelector(`.onboarding-step[data-step="${onboardingStep}"]`).classList.add('active');
+            renderCurrentHabitsAudit();
+        }
+
+        function prevOnboardingStep() {
+            document.querySelector(`.onboarding-step[data-step="${onboardingStep}"]`).classList.remove('active');
+            onboardingStep--;
+            document.querySelector(`.onboarding-step[data-step="${onboardingStep}"]`).classList.add('active');
+            
+            // Update progress
+            document.getElementById('step-indicator-2').classList.remove('active');
+            document.getElementById('step-indicator-1').classList.add('active');
+            document.getElementById('step-indicator-1').classList.remove('completed');
+            document.getElementById('progress-line').style.width = '0%';
+        }
+
+        function completeOnboarding() {
+            state.onboardingComplete = true;
+            saveData();
+            showMainApp();
+        }
+
+        function showMainApp() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            render();
+        }
+
+        // Current Habits
+        function addCurrentHabit() {
+            const input = document.getElementById('current-habit-input');
+            const habit = input.value.trim();
+            
+            if (!habit) return;
+
+            state.currentHabits.push({
+                id: Date.now(),
+                habit,
+                time: '',
+                location: '',
+                frequency: 'daily',
+                score: '='
+            });
+
+            input.value = '';
+            saveData();
+            renderCurrentHabitsAudit();
+        }
+
+        function updateCurrentHabitScore(id, field, value) {
+            const habit = state.currentHabits.find(h => h.id === id);
+            if (habit) {
+                habit[field] = value;
+                saveData();
+            }
+        }
+
+        function deleteCurrentHabit(id) {
+            state.currentHabits = state.currentHabits.filter(h => h.id !== id);
+            saveData();
+            renderCurrentHabitsAudit();
+        }
+
+        function renderCurrentHabitsAudit() {
+            const container = document.getElementById('current-habits-list');
+            if (!container) return;
+
+            if (state.currentHabits.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><p>Start adding your current habits</p></div>';
+                return;
+            }
+
+            container.innerHTML = state.currentHabits.map(h => `
+                <div class="audit-item">
+                    <div><strong>${escapeHtml(h.habit)}</strong></div>
+                    <input type="time" class="form-input" value="${h.time}" onchange="updateCurrentHabitScore(${h.id}, 'time', this.value)" style="padding: 0.75rem;">
+                    <input type="text" class="form-input" value="${h.location}" onchange="updateCurrentHabitScore(${h.id}, 'location', this.value)" placeholder="Location" style="padding: 0.75rem;">
+                    <select class="score-select" onchange="updateCurrentHabitScore(${h.id}, 'score', this.value)">
+                        <option value="+" ${h.score === '+' ? 'selected' : ''}>+ Good</option>
+                        <option value="=" ${h.score === '=' ? 'selected' : ''}>= Neutral</option>
+                        <option value="-" ${h.score === '-' ? 'selected' : ''}>- Bad</option>
+                    </select>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCurrentHabit(${h.id})">×</button>
+                </div>
+            `).join('');
+
+            const auditList = document.getElementById('audit-list');
+            if (auditList) {
+                auditList.innerHTML = container.innerHTML;
+            }
+        }
+
+        // Add Habit
+        function addHabit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            const habit = {
+                id: Date.now(),
+                name: formData.get('name'),
+                twoMinute: formData.get('twoMinute'),
+                time: formData.get('time'),
+                location: formData.get('location'),
+                cue: formData.get('cue'),
+                stack: formData.get('stack'),
+                reward: formData.get('reward'),
+                environment: formData.get('environment'),
+                streak: 0,
+                completed: false,
+                lastCompleted: null,
+                history: [],
+                createdAt: new Date().toISOString()
+            };
+
+            state.habits.push(habit);
+            event.target.reset();
+            saveData();
+            render();
+            showToast('Habit created! Start with the 2-minute version.');
+        }
+
+        // Toggle Habit
+        function toggleHabit(id) {
+            const habit = state.habits.find(h => h.id === id);
+            if (!habit) return;
+
+            const today = new Date().toDateString();
+            habit.completed = !habit.completed;
+
+            if (habit.completed) {
+                if (habit.lastCompleted !== today) {
+                    habit.streak++;
+                    habit.lastCompleted = today;
+                    habit.history.push({ date: today, completed: true });
+                }
+            } else {
+                if (habit.lastCompleted === today) {
+                    habit.streak = Math.max(0, habit.streak - 1);
+                    habit.lastCompleted = null;
+                    habit.history = habit.history.filter(h => h.date !== today);
+                }
+            }
+
+            checkStreak();
+            saveData();
+            render();
+        }
+
+        // Delete Habit
+        function deleteHabit(id) {
+            if (!confirm('Delete this habit?')) return;
+            state.habits = state.habits.filter(h => h.id !== id);
+            saveData();
+            render();
+        }
+
+        // Check Streak
+        function checkStreak() {
+            const today = new Date().toDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            if (state.habits.length === 0) {
+                state.streak = 0;
+                return;
+            }
+
+            const allCompletedToday = state.habits.every(h => h.lastCompleted === today);
+
+            if (allCompletedToday) {
+                if (state.lastCheckDate !== today) {
+                    if (state.lastCheckDate === yesterdayStr || state.lastCheckDate === null) {
+                        state.streak++;
+                    } else {
+                        state.streak = 1;
+                    }
+                    state.lastCheckDate = today;
+                }
+            }
+
+            if (state.streak > state.bestStreak) {
+                state.bestStreak = state.streak;
+            }
+        }
+
+        // Reflections
+        function saveReflection(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            state.reflections.push({
+                date: new Date().toISOString(),
+                wins: formData.get('wins'),
+                challenges: formData.get('challenges'),
+                tomorrow: formData.get('tomorrow')
+            });
+
+            event.target.reset();
+            saveData();
+            render();
+            showToast('Reflection saved!');
+        }
+
+        function saveReview(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+
+            state.reviews.push({
+                date: new Date().toISOString(),
+                patterns: formData.get('patterns'),
+                adjustments: formData.get('adjustments')
+            });
+
+            event.target.reset();
+            saveData();
+            render();
+            showToast('Review saved!');
+        }
+
+        // View Switching
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(viewName).classList.add('active');
+            event.target.classList.add('active');
+            
+            render();
+        }
+
+        // Render
+        function render() {
+            if (!state.onboardingComplete) return;
+
+            document.getElementById('header-identity').textContent = state.identity.statement;
+            
+            renderToday();
+            renderHabits();
+            renderReflections();
+            renderReview();
+            renderAnalytics();
+            renderCurrentHabitsAudit();
+            checkNeverMissTwice();
+        }
+
+        function renderToday() {
+            document.getElementById('today-streak').textContent = state.streak;
+
+            const today = new Date().toDateString();
+            const completed = state.habits.filter(h => h.lastCompleted === today).length;
+            const total = state.habits.length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('today-completion').textContent = `${percentage}%`;
+            document.getElementById('today-identity-score').textContent = `${percentage}%`;
+
+            const habitsList = document.getElementById('today-habits-list');
+            if (state.habits.length === 0) {
+                habitsList.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No habits yet. Go to "Build Habits" to start.</p></div>';
+            } else {
+                habitsList.innerHTML = state.habits.map(h => `
+                    <div class="habit-item">
+                        <div class="habit-item-header">
+                            <div style="flex: 1;">
+                                <div class="habit-name">${escapeHtml(h.name)}</div>
+                                <span class="two-minute-badge">Start: ${escapeHtml(h.twoMinute)}</span>
+                            </div>
+                            <input type="checkbox" class="habit-checkbox" ${h.completed ? 'checked' : ''} onchange="toggleHabit(${h.id})">
+                        </div>
+                        <div class="habit-details">
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">When:</span>
+                                <span class="habit-detail-value">${h.time} at ${escapeHtml(h.location)}</span>
+                            </div>
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">After:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.stack || 'No habit stack')}</span>
+                            </div>
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">Streak:</span>
+                                <span class="habit-detail-value streak-indicator">${h.streak} days</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const reflectionPrompt = document.getElementById('reflection-prompt-today');
+            if (completed === total && total > 0) {
+                reflectionPrompt.innerHTML = `
+                    <div class="alert" style="background: rgba(34, 197, 94, 0.1); border-color: var(--success); color: var(--success);">
+                        <strong>Perfect day!</strong> Take a moment to reflect.
+                        <button class="btn btn-primary btn-sm" onclick="switchView('reflection')" style="margin-top: 0.5rem;">Add Reflection</button>
+                    </div>
+                `;
+            } else {
+                reflectionPrompt.innerHTML = `
+                    <div class="alert alert-info">
+                        Before bed, take 2 minutes to reflect.
+                    </div>
+                `;
+            }
+        }
+
+        function renderHabits() {
+            const list = document.getElementById('habits-list');
+            if (state.habits.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div><p>No habits yet</p></div>';
+            } else {
+                list.innerHTML = state.habits.map(h => `
+                    <div class="habit-item">
+                        <div class="habit-item-header">
+                            <div style="flex: 1;">
+                                <div class="habit-name">${escapeHtml(h.name)}</div>
+                                <span class="habit-identity">Identity Habit</span>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteHabit(${h.id})">Delete</button>
+                        </div>
+                        <div class="habit-details">
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">2-Minute:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.twoMinute)}</span>
+                            </div>
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">When & Where:</span>
+                                <span class="habit-detail-value">${h.time} at ${escapeHtml(h.location)}</span>
+                            </div>
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">Stack:</span>
+                                <span class="habit-detail-value">${escapeHtml(h.stack)}</span>
+                            </div>
+                            <div class="habit-detail-row">
+                                <span class="habit-detail-label">Streak:</span>
+                                <span class="habit-detail-value streak-indicator">${h.streak} days</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderReflections() {
+            const list = document.getElementById('past-reflections');
+            if (!list) return;
+
+            if (state.reflections.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No reflections yet</p></div>';
+            } else {
+                list.innerHTML = state.reflections.slice(-7).reverse().map(r => `
+                    <div class="card" style="background: var(--bg-tertiary);">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">
+                            ${new Date(r.date).toLocaleDateString()}
+                        </div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Wins:</strong> ${escapeHtml(r.wins)}</div>
+                        <div style="margin-bottom: 0.5rem;"><strong>Challenges:</strong> ${escapeHtml(r.challenges)}</div>
+                        <div><strong>Tomorrow:</strong> ${escapeHtml(r.tomorrow)}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderReview() {
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+
+            const weekHabits = state.habits.map(h => {
+                const weekHistory = h.history.filter(entry => new Date(entry.date) > weekAgo);
+                return { name: h.name, completed: weekHistory.length };
+            });
+
+            const totalPossible = state.habits.length * 7;
+            const totalCompleted = weekHabits.reduce((sum, h) => sum + h.completed, 0);
+            const weekRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+
+            document.getElementById('week-completion').textContent = `${weekRate}%`;
+
+            const best = weekHabits.sort((a, b) => b.completed - a.completed)[0];
+            document.getElementById('week-best-habit').textContent = best ? best.name : '-';
+
+            const worst = weekHabits.sort((a, b) => a.completed - b.completed)[0];
+            document.getElementById('week-needs-work').textContent = worst && worst.completed < 7 ? worst.name : '-';
+        }
+
+        function renderAnalytics() {
+            document.getElementById('analytics-streak').textContent = state.bestStreak;
+            document.getElementById('analytics-habits').textContent = state.habits.length;
+
+            const totalCompletions = state.habits.reduce((sum, h) => sum + h.history.length, 0);
+            const totalPossible = state.habits.reduce((sum, h) => {
+                const days = Math.floor((Date.now() - new Date(h.createdAt)) / (1000 * 60 * 60 * 24));
+                return sum + Math.max(days, 1);
+            }, 0);
+            const rate = totalPossible > 0 ? Math.round((totalCompletions / totalPossible) * 100) : 0;
+
+            document.getElementById('analytics-rate').textContent = `${rate}%`;
+            document.getElementById('analytics-identity').textContent = `${rate}%`;
+        }
+
+        function checkNeverMissTwice() {
+            const warning = document.getElementById('never-miss-twice-warning');
+            if (!warning) return;
+
+            const today = new Date().toDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            const missedYesterday = state.habits.some(h => 
+                !h.history.some(entry => entry.date === yesterdayStr && entry.completed)
+            );
+
+            const completedToday = state.habits.filter(h => h.lastCompleted === today).length;
+            const notCompletedYet = completedToday < state.habits.length;
+
+            if (missedYesterday && notCompletedYet && state.habits.length > 0) {
+                warning.innerHTML = `
+                    <div class="miss-warning">
+                        <div class="miss-warning-title">⚠️ NEVER MISS TWICE</div>
+                        <div class="miss-warning-text">
+                            You missed habits yesterday. Missing today would break your pattern.
+                            <strong>Do at least the 2-minute version right now.</strong>
+                        </div>
+                    </div>
+                `;
+            } else {
+                warning.innerHTML = '';
+            }
+        }
+
+        // Export
+        function exportData(format) {
+            if (format === 'json') {
+                const dataStr = JSON.stringify(state, null, 2);
+                downloadFile('atomic-discipline.json', dataStr, 'application/json');
+            } else if (format === 'csv') {
+                let csv = 'Type,Name,Date,Details\n';
+                state.habits.forEach(h => {
+                    h.history.forEach(entry => {
+                        csv += `Habit,${h.name},${entry.date},Completed\n`;
+                    });
+                });
+                downloadFile('atomic-discipline.csv', csv, 'text/csv');
+            }
+        }
+
+        function downloadFile(filename, content, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetAll() {
+            if (!confirm('Delete ALL data? Cannot be undone.')) return;
+            if (!confirm('Last chance. Sure?')) return;
+            
+            localStorage.removeItem('atomicDisciplineData');
+            location.reload();
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Utility
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Storage
+        function saveData() {
+            localStorage.setItem('atomicDisciplineData', JSON.stringify(state));
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('atomicDisciplineData');
+            if (saved) {
+                state = JSON.parse(saved);
+                
+                const today = new Date().toDateString();
+                state.habits.forEach(h => {
+                    if (h.lastCompleted !== today) {
+                        h.completed = false;
+                    }
+                });
+            }
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
