@@ -576,6 +576,22 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            .stat-value {
+                font-size: clamp(1.75rem, 8vw, 3rem);
+            }
+
+            .card {
+                padding: 1.25rem;
+            }
+
+            .toast {
+                bottom: 1rem;
+                right: 1rem;
+                left: 1rem;
+                right: 1rem;
+                text-align: center;
+            }
         }
 
         /* Main App Styles (abbreviated - keeping existing styles) */
@@ -996,6 +1012,7 @@
                     </div>
                 </div>
 
+                <div id="onboarding-error" style="display:none; color: var(--danger); font-weight: 600; margin-top: 1rem;"></div>
                 <div class="onboarding-nav">
                     <div></div>
                     <button class="btn btn-primary" onclick="nextOnboardingStep()">
@@ -1338,11 +1355,16 @@
             if (onboardingStep === 1) {
                 const statement = document.getElementById('identity-statement').value.trim();
                 const behaviors = document.getElementById('identity-behaviors').value.trim();
-                
+
+                const errEl = document.getElementById('onboarding-error');
                 if (!statement || !behaviors) {
-                    alert('Please complete both fields');
+                    if (errEl) {
+                        errEl.textContent = 'Please complete both fields before continuing.';
+                        errEl.style.display = 'block';
+                    }
                     return;
                 }
+                if (errEl) errEl.style.display = 'none';
 
                 state.identity.statement = statement;
                 state.identity.behaviors = behaviors.split('\n').filter(b => b.trim());
@@ -1432,14 +1454,14 @@
             container.innerHTML = state.currentHabits.map(h => `
                 <div class="audit-item">
                     <div><strong>${escapeHtml(h.habit)}</strong></div>
-                    <input type="time" class="form-input" value="${h.time}" onchange="updateCurrentHabitScore(${h.id}, 'time', this.value)" style="padding: 0.75rem;">
-                    <input type="text" class="form-input" value="${h.location}" onchange="updateCurrentHabitScore(${h.id}, 'location', this.value)" placeholder="Location" style="padding: 0.75rem;">
-                    <select class="score-select" onchange="updateCurrentHabitScore(${h.id}, 'score', this.value)">
+                    <input type="time" class="form-input" value="${h.time}" oninput="debouncedUpdateScore(${h.id}, 'time', this.value)" style="padding: 0.75rem;" aria-label="Time for ${escapeHtml(h.habit)}">
+                    <input type="text" class="form-input" value="${escapeHtml(h.location)}" oninput="debouncedUpdateScore(${h.id}, 'location', this.value)" placeholder="Location" style="padding: 0.75rem;" aria-label="Location for ${escapeHtml(h.habit)}">
+                    <select class="score-select" onchange="updateCurrentHabitScore(${h.id}, 'score', this.value)" aria-label="Score for ${escapeHtml(h.habit)}">
                         <option value="+" ${h.score === '+' ? 'selected' : ''}>+ Good</option>
                         <option value="=" ${h.score === '=' ? 'selected' : ''}>= Neutral</option>
                         <option value="-" ${h.score === '-' ? 'selected' : ''}>- Bad</option>
                     </select>
-                    <button class="btn btn-danger btn-sm" onclick="deleteCurrentHabit(${h.id})">×</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCurrentHabit(${h.id})" aria-label="Delete ${escapeHtml(h.habit)}">×</button>
                 </div>
             `).join('');
 
@@ -1483,7 +1505,7 @@
             const habit = state.habits.find(h => h.id === id);
             if (!habit) return;
 
-            const today = new Date().toDateString();
+            const today = new Date().toISOString().slice(0, 10);
             habit.completed = !habit.completed;
 
             if (habit.completed) {
@@ -1515,10 +1537,10 @@
 
         // Check Streak
         function checkStreak() {
-            const today = new Date().toDateString();
+            const today = new Date().toISOString().slice(0, 10);
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toDateString();
+            const yesterdayStr = yesterday.toISOString().slice(0, 10);
 
             if (state.habits.length === 0) {
                 state.streak = 0;
@@ -1606,7 +1628,7 @@
         function renderToday() {
             document.getElementById('today-streak').textContent = state.streak;
 
-            const today = new Date().toDateString();
+            const today = new Date().toISOString().slice(0, 10);
             const completed = state.habits.filter(h => h.lastCompleted === today).length;
             const total = state.habits.length;
             const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -1625,7 +1647,7 @@
                                 <div class="habit-name">${escapeHtml(h.name)}</div>
                                 <span class="two-minute-badge">Start: ${escapeHtml(h.twoMinute)}</span>
                             </div>
-                            <input type="checkbox" class="habit-checkbox" ${h.completed ? 'checked' : ''} onchange="toggleHabit(${h.id})">
+                            <input type="checkbox" class="habit-checkbox" ${h.completed ? 'checked' : ''} onchange="toggleHabit(${h.id})" aria-label="Mark ${escapeHtml(h.name)} as complete">
                         </div>
                         <div class="habit-details">
                             <div class="habit-detail-row">
@@ -1723,8 +1745,9 @@
             const weekAgo = new Date();
             weekAgo.setDate(weekAgo.getDate() - 7);
 
+            const weekAgoStr = weekAgo.toISOString().slice(0, 10);
             const weekHabits = state.habits.map(h => {
-                const weekHistory = h.history.filter(entry => new Date(entry.date) > weekAgo);
+                const weekHistory = h.history.filter(entry => entry.date >= weekAgoStr);
                 return { name: h.name, completed: weekHistory.length };
             });
 
@@ -1734,10 +1757,10 @@
 
             document.getElementById('week-completion').textContent = `${weekRate}%`;
 
-            const best = weekHabits.sort((a, b) => b.completed - a.completed)[0];
+            const sorted = weekHabits.slice().sort((a, b) => b.completed - a.completed);
+            const best = sorted[0];
+            const worst = sorted[sorted.length - 1];
             document.getElementById('week-best-habit').textContent = best ? best.name : '-';
-
-            const worst = weekHabits.sort((a, b) => a.completed - b.completed)[0];
             document.getElementById('week-needs-work').textContent = worst && worst.completed < 7 ? worst.name : '-';
         }
 
@@ -1753,20 +1776,40 @@
             const rate = totalPossible > 0 ? Math.round((totalCompletions / totalPossible) * 100) : 0;
 
             document.getElementById('analytics-rate').textContent = `${rate}%`;
-            document.getElementById('analytics-identity').textContent = `${rate}%`;
+
+            // Identity match: % of identity behaviors that have a corresponding habit
+            const behaviors = state.identity.behaviors || [];
+            let identityMatch = 0;
+            if (behaviors.length > 0) {
+                const matched = behaviors.filter(b =>
+                    state.habits.some(h =>
+                        h.name.toLowerCase().includes(b.replace(/^[-•*]\s*/, '').trim().toLowerCase().slice(0, 6))
+                    )
+                ).length;
+                identityMatch = Math.round((matched / behaviors.length) * 100);
+            } else if (state.habits.length > 0) {
+                identityMatch = 100;
+            }
+            document.getElementById('analytics-identity').textContent = `${identityMatch}%`;
         }
 
         function checkNeverMissTwice() {
             const warning = document.getElementById('never-miss-twice-warning');
             if (!warning) return;
 
-            const today = new Date().toDateString();
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toDateString();
+            const today = new Date().toISOString().slice(0, 10);
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
 
-            const missedYesterday = state.habits.some(h => 
-                !h.history.some(entry => entry.date === yesterdayStr && entry.completed)
+            // Only flag habits that existed before yesterday (not brand-new ones)
+            const habitsExistingYesterday = state.habits.filter(h => {
+                const created = new Date(h.createdAt).toISOString().slice(0, 10);
+                return created <= yesterdayStr;
+            });
+
+            const missedYesterday = habitsExistingYesterday.length > 0 && habitsExistingYesterday.some(h =>
+                !h.history.some(entry => entry.date === yesterdayStr)
             );
 
             const completedToday = state.habits.filter(h => h.lastCompleted === today).length;
@@ -1825,10 +1868,23 @@
         function showToast(message) {
             const toast = document.createElement('div');
             toast.className = 'toast';
+            toast.setAttribute('role', 'status');
+            toast.setAttribute('aria-live', 'polite');
             toast.textContent = message;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
+
+        // Debounce utility
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        const debouncedUpdateScore = debounce(updateCurrentHabitScore, 400);
 
         // Utility
         function escapeHtml(text) {
@@ -1845,13 +1901,38 @@
         function loadData() {
             const saved = localStorage.getItem('atomicDisciplineData');
             if (saved) {
-                state = JSON.parse(saved);
-                
-                const today = new Date().toDateString();
+                try {
+                    const parsed = JSON.parse(saved);
+                    // Merge parsed data, ensuring all required keys exist
+                    state = Object.assign({}, state, parsed);
+                    state.habits = Array.isArray(parsed.habits) ? parsed.habits : [];
+                    state.currentHabits = Array.isArray(parsed.currentHabits) ? parsed.currentHabits : [];
+                    state.reflections = Array.isArray(parsed.reflections) ? parsed.reflections : [];
+                    state.reviews = Array.isArray(parsed.reviews) ? parsed.reviews : [];
+                } catch (e) {
+                    console.warn('Corrupted data in localStorage, starting fresh.', e);
+                    localStorage.removeItem('atomicDisciplineData');
+                    return;
+                }
+
+                const today = new Date().toISOString().slice(0, 10);
                 state.habits.forEach(h => {
+                    if (!h.history) h.history = [];
+                    if (!h.createdAt) h.createdAt = new Date().toISOString();
+                    // Normalise legacy toDateString() lastCompleted to ISO date
+                    if (h.lastCompleted && h.lastCompleted.length > 10) {
+                        h.lastCompleted = new Date(h.lastCompleted).toISOString().slice(0, 10);
+                    }
                     if (h.lastCompleted !== today) {
                         h.completed = false;
                     }
+                    // Normalise legacy history entry dates
+                    h.history = h.history.map(entry => ({
+                        date: entry.date && entry.date.length > 10
+                            ? new Date(entry.date).toISOString().slice(0, 10)
+                            : entry.date,
+                        completed: true
+                    }));
                 });
             }
         }
