@@ -919,12 +919,12 @@
 <body>
     <!-- Welcome Screen -->
     <div id="welcome-screen">
-        <div class="welcome-bg">
-            <div class="grid-overlay"></div>
-        </div>
 
         <!-- Landing Page -->
         <div class="welcome-content" id="landing-page">
+        <div class="welcome-bg">
+            <div class="grid-overlay"></div>
+        </div>
             <div class="hero">
                 <div class="hero-badge">Atomic Habits System</div>
                 <h1 class="hero-title">Build Habits<br>That Last</h1>
@@ -1485,9 +1485,9 @@
         }
 
         // Add Habit
-        function addHabit(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
+        function addHabit(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
 
             const habit = {
                 id: Date.now(),
@@ -1507,7 +1507,7 @@
             };
 
             state.habits.push(habit);
-            event.target.reset();
+            e.target.reset();
             saveData();
             render();
             showToast('Habit created! Start with the 2-minute version.');
@@ -1579,9 +1579,9 @@
         }
 
         // Reflections
-        function saveReflection(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
+        function saveReflection(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
 
             state.reflections.push({
                 date: new Date().toISOString(),
@@ -1590,15 +1590,15 @@
                 tomorrow: formData.get('tomorrow')
             });
 
-            event.target.reset();
+            e.target.reset();
             saveData();
             render();
             showToast('Reflection saved!');
         }
 
-        function saveReview(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
+        function saveReview(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
 
             state.reviews.push({
                 date: new Date().toISOString(),
@@ -1606,7 +1606,7 @@
                 adjustments: formData.get('adjustments')
             });
 
-            event.target.reset();
+            e.target.reset();
             saveData();
             render();
             showToast('Review saved!');
