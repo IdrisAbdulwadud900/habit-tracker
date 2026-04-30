@@ -951,39 +951,91 @@
             <div class="grid-overlay"></div>
         </div>
             <div class="hero">
-                <div class="hero-badge">Atomic Habits System</div>
-                <h1 class="hero-title">Build Habits<br>That Last</h1>
+                <div class="hero-badge">⚡ Takes literally 2 minutes to start</div>
+                <h1 class="hero-title">Stop Trying.<br>Start Tiny.</h1>
                 <p class="hero-subtitle">
-                    Stop setting goals. Start building identity. This is the system that makes tiny changes become remarkable results.
+                    You don't need willpower. You don't need motivation. You just need a system so small it's embarrassing to skip.
                 </p>
+
+                <!-- Social proof bar -->
+                <div style="display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:2.5rem;animation:fadeInUp 0.8s ease-out 0.45s both;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;color:var(--text-secondary);">
+                        <span style="color:var(--accent);">✓</span> No gym required
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;color:var(--text-secondary);">
+                        <span style="color:var(--accent);">✓</span> No 5am wake-ups
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;color:var(--text-secondary);">
+                        <span style="color:var(--accent);">✓</span> No motivation needed
+                    </div>
+                </div>
+
                 <button class="hero-cta" onclick="showOnboarding()">
-                    Begin Your Transformation
+                    Start in 2 Minutes — It's Free
                     <span class="arrow-icon">→</span>
                 </button>
+                <div style="margin-top:1rem;font-size:0.85rem;color:var(--text-tertiary);animation:fadeInUp 0.8s ease-out 0.6s both;">
+                    No account. No download. No excuses.
+                </div>
+            </div>
+
+            <!-- Lazy proof section -->
+            <div style="text-align:center;margin-bottom:2rem;animation:fadeInUp 0.8s ease-out 0.65s both;">
+                <p style="font-size:1rem;color:var(--text-secondary);margin-bottom:1.5rem;">The honest truth about why you've failed before 👇</p>
             </div>
 
             <div class="features">
                 <div class="feature-card">
-                    <span class="feature-icon">🎯</span>
-                    <h3 class="feature-title">Identity First</h3>
+                    <span class="feature-icon">😩</span>
+                    <h3 class="feature-title">Too Hard = You Quit</h3>
                     <p class="feature-desc">
-                        Don't track what you do. Become who you want to be. Every habit reinforces your desired identity.
+                        Every app starts with a 30-day challenge. You last 4 days. <strong style="color:var(--accent);">We start with 2 minutes.</strong> Read one page. Do one push-up. That's it.
                     </p>
                 </div>
                 <div class="feature-card">
-                    <span class="feature-icon">⚡</span>
-                    <h3 class="feature-title">2-Minute Rule</h3>
+                    <span class="feature-icon">🧠</span>
+                    <h3 class="feature-title">Identity, Not Willpower</h3>
                     <p class="feature-desc">
-                        Scale down until it's impossible to fail. Starting is the hardest part—we make it absurdly easy.
+                        Stop saying "I'm trying to exercise." Start saying "I'm someone who moves daily." <strong style="color:var(--accent);">Identity beats motivation every time.</strong>
                     </p>
                 </div>
                 <div class="feature-card">
-                    <span class="feature-icon">🔗</span>
-                    <h3 class="feature-title">Habit Stacking</h3>
+                    <span class="feature-icon">🔔</span>
+                    <h3 class="feature-title">We'll Remind You</h3>
                     <p class="feature-desc">
-                        Link new behaviors to existing ones. Your current habits become the triggers for new growth.
+                        Forget to check in? <strong style="color:var(--accent);">We'll nudge you.</strong> Daily habit reminders + an end-of-day reflection prompt so nothing slips through.
                     </p>
                 </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔥</span>
+                    <h3 class="feature-title">See Your Streak</h3>
+                    <p class="feature-desc">
+                        A visible chain of completed days is the most powerful motivator there is. <strong style="color:var(--accent);">Don't break the chain.</strong> Miss 80%? Streak still lives.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">💰</span>
+                    <h3 class="feature-title">Track Your Naira</h3>
+                    <p class="feature-desc">
+                        Set a daily budget, log expenses in seconds, see where your money goes. <strong style="color:var(--accent);">Spending awareness is a habit too.</strong>
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3 class="feature-title">Proof You're Growing</h3>
+                    <p class="feature-desc">
+                        30-day heatmap, streaks, identity match score. <strong style="color:var(--accent);">Numbers don't lie.</strong> Watch yourself become who you said you'd be.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bottom CTA -->
+            <div style="text-align:center;padding:2rem 0 1rem;animation:fadeInUp 0.8s ease-out 0.9s both;">
+                <p style="font-size:1.1rem;color:var(--text-secondary);margin-bottom:1.5rem;">Still reading? That's already more effort than the first habit requires.</p>
+                <button class="hero-cta" onclick="showOnboarding()">
+                    OK Fine, Let's Do This
+                    <span class="arrow-icon">→</span>
+                </button>
             </div>
         </div>
 
@@ -1122,6 +1174,7 @@
                 <!-- Today View -->
                 <div id="today" class="view active">
                     <div id="never-miss-twice-warning"></div>
+                    <div id="notification-banner"></div>
 
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -1390,7 +1443,7 @@
                             <h2 class="card-title">Daily Budget</h2>
                         </div>
                         <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
-                            <span style="color:var(--text-secondary);">Set daily limit: $</span>
+                            <span style="color:var(--text-secondary);">Set daily limit: ₦</span>
                             <input type="number" id="spending-budget-input" class="form-input" min="0" step="0.01" placeholder="e.g. 50" style="max-width:160px;">
                             <button class="btn btn-primary btn-sm" onclick="saveDailyBudget()">Save Budget</button>
                         </div>
@@ -1413,7 +1466,7 @@
                         <form id="spending-form" onsubmit="addExpense(event)">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">Amount ($)</label>
+                                    <label class="form-label">Amount (₦)</label>
                                     <input type="number" class="form-input" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
                                 </div>
                                 <div class="form-group">
@@ -1506,7 +1559,9 @@
             bestStreak: 0,
             lastCheckDate: null,
             expenses: [],
-            dailyBudget: 0
+            dailyBudget: 0,
+            notifHabitTime: '08:00',
+            notifReflectTime: '21:00'
         };
 
         let onboardingStep = 1;
@@ -1516,6 +1571,7 @@
             loadData();
             if (state.onboardingComplete) {
                 showMainApp();
+                scheduleNotifications();
             }
             render();
         }
@@ -1870,6 +1926,7 @@
             renderCurrentHabitsAudit();
             renderSpending();
             checkNeverMissTwice();
+            renderNotificationBanner();
         }
 
         function renderToday() {
@@ -2334,13 +2391,13 @@
             const monthTotal = monthExpenses.reduce((s, ex) => s + ex.amount, 0);
             const budgetLeft = Math.max(0, state.dailyBudget - todayTotal);
 
-            document.getElementById('spending-today-total').textContent = `$${todayTotal.toFixed(2)}`;
-            document.getElementById('spending-week-total').textContent  = `$${weekTotal.toFixed(2)}`;
-            document.getElementById('spending-month-total').textContent = `$${monthTotal.toFixed(2)}`;
+            document.getElementById('spending-today-total').textContent = `₦${todayTotal.toFixed(2)}`;
+            document.getElementById('spending-week-total').textContent  = `₦${weekTotal.toFixed(2)}`;
+            document.getElementById('spending-month-total').textContent = `₦${monthTotal.toFixed(2)}`;
 
             const budgetEl = document.getElementById('spending-budget-left');
             if (state.dailyBudget > 0) {
-                budgetEl.textContent = `$${budgetLeft.toFixed(2)}`;
+                budgetEl.textContent = `₦${budgetLeft.toFixed(2)}`;
                 budgetEl.style.color = budgetLeft === 0 ? 'var(--danger)' : budgetLeft < state.dailyBudget * 0.2 ? 'var(--accent)' : 'var(--success)';
             } else {
                 budgetEl.textContent = '—';
@@ -2378,7 +2435,7 @@
                                 <div style="font-weight:600;">${escapeHtml(ex.category)}${ex.description ? ' — ' + escapeHtml(ex.description) : ''}</div>
                                 <div style="font-size:0.8rem; color:var(--text-secondary);">${ex.time}</div>
                             </div>
-                            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; color:var(--accent);">$${ex.amount.toFixed(2)}</div>
+                            <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700; color:var(--accent);">₦${ex.amount.toFixed(2)}</div>
                             <button class="btn btn-secondary btn-sm" onclick="editExpense(${ex.id})" aria-label="Edit expense" style="padding:0.3rem 0.6rem;">✏️</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteExpense(${ex.id})" aria-label="Delete expense">×</button>
                         </div>
@@ -2401,7 +2458,7 @@
                     return `<div style="margin-bottom:1rem;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
                             <span style="font-weight:600;">${escapeHtml(cat)}</span>
-                            <span style="color:var(--accent); font-weight:700;">$${amt.toFixed(2)} <span style="color:var(--text-secondary); font-size:0.85rem;">(${pct}%)</span></span>
+                            <span style="color:var(--accent); font-weight:700;">₦${amt.toFixed(2)} <span style="color:var(--text-secondary); font-size:0.85rem;">(${pct}%)</span></span>
                         </div>
                         <div style="background:var(--bg-tertiary); border-radius:999px; height:8px; overflow:hidden;">
                             <div style="height:100%; border-radius:999px; background:var(--accent); width:${barW}%; transition:width 0.4s;"></div>
@@ -2409,6 +2466,112 @@
                     </div>`;
                 }).join('');
             }
+        }
+
+        // ── Notifications ─────────────────────────────────────────────
+        // State additions handled in loadData normalisation below
+        // Times stored as "HH:MM" strings, e.g. "08:00" and "21:00"
+
+        function renderNotificationBanner() {
+            const banner = document.getElementById('notification-banner');
+            if (!banner) return;
+
+            // Already granted — show manage UI
+            if (Notification.permission === 'granted') {
+                const habitTime  = state.notifHabitTime  || '08:00';
+                const reflectTime = state.notifReflectTime || '21:00';
+                banner.innerHTML = `
+                    <div class="alert alert-info" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
+                        <div>
+                            <strong>🔔 Reminders ON</strong>
+                            <span style="font-size:0.85rem;color:var(--text-secondary);margin-left:0.5rem;">Habit: ${habitTime} · Reflection: ${reflectTime}</span>
+                        </div>
+                        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                            <input type="time" id="notif-habit-time" value="${habitTime}" class="form-input" style="width:110px;padding:0.4rem 0.6rem;" title="Daily habit reminder time">
+                            <input type="time" id="notif-reflect-time" value="${reflectTime}" class="form-input" style="width:110px;padding:0.4rem 0.6rem;" title="Evening reflection reminder time">
+                            <button class="btn btn-primary btn-sm" onclick="saveNotifTimes()">Save Times</button>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            // Not yet asked or denied
+            if (Notification.permission === 'denied') {
+                banner.innerHTML = `
+                    <div class="alert" style="background:rgba(239,68,68,0.1);border-color:var(--danger);color:var(--danger);font-size:0.9rem;">
+                        🔕 Notifications blocked in browser settings. Enable them to get daily reminders.
+                    </div>`;
+                return;
+            }
+
+            // Default — ask
+            banner.innerHTML = `
+                <div class="alert alert-info" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
+                    <div>
+                        <strong>🔔 Turn on reminders?</strong>
+                        <span style="font-size:0.85rem;color:var(--text-secondary);margin-left:0.5rem;">Daily nudge so you never forget your habits</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="requestNotifPermission()">Enable Reminders</button>
+                </div>`;
+        }
+
+        async function requestNotifPermission() {
+            if (!('Notification' in window)) {
+                showToast('Your browser does not support notifications.');
+                return;
+            }
+            const result = await Notification.requestPermission();
+            if (result === 'granted') {
+                if (!state.notifHabitTime)  state.notifHabitTime  = '08:00';
+                if (!state.notifReflectTime) state.notifReflectTime = '21:00';
+                saveData();
+                scheduleNotifications();
+                showToast('Reminders enabled! 🔔');
+            }
+            renderNotificationBanner();
+        }
+
+        function saveNotifTimes() {
+            const ht = document.getElementById('notif-habit-time');
+            const rt = document.getElementById('notif-reflect-time');
+            if (ht) state.notifHabitTime  = ht.value;
+            if (rt) state.notifReflectTime = rt.value;
+            saveData();
+            scheduleNotifications();
+            showToast('Reminder times saved!');
+            renderNotificationBanner();
+        }
+
+        function scheduleNotifications() {
+            if (Notification.permission !== 'granted') return;
+
+            // Clear any previously scheduled timers
+            if (window._notifTimers) window._notifTimers.forEach(t => clearTimeout(t));
+            window._notifTimers = [];
+
+            const now = new Date();
+            const scheduleAt = (timeStr, title, body) => {
+                const [h, m] = timeStr.split(':').map(Number);
+                const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+                if (target <= now) target.setDate(target.getDate() + 1); // schedule for tomorrow if already passed
+                const ms = target - now;
+                const t = setTimeout(() => {
+                    new Notification(title, { body, icon: '/favicon.ico', tag: title });
+                    // Reschedule for next day
+                    scheduleAt(timeStr, title, body);
+                }, ms);
+                window._notifTimers.push(t);
+            };
+
+            const habitTime   = state.notifHabitTime  || '08:00';
+            const reflectTime = state.notifReflectTime || '21:00';
+            const incomplete  = state.habits.filter(h => h.lastCompleted !== localDateStr()).length;
+            const habitBody   = incomplete > 0
+                ? `You have ${incomplete} habit${incomplete > 1 ? 's' : ''} to complete today. Start with just 2 minutes!`
+                : 'All habits done! Keep that streak alive tomorrow.';
+
+            scheduleAt(habitTime,   'Atomic Discipline 🔥', habitBody);
+            scheduleAt(reflectTime, 'Time to Reflect 🌙', 'Take 2 minutes to log today\'s reflection. Small wins add up.');
         }
 
         // Export
@@ -2481,6 +2644,8 @@
                     state.reviews = Array.isArray(parsed.reviews) ? parsed.reviews : [];
                     state.expenses = Array.isArray(parsed.expenses) ? parsed.expenses : [];
                     state.dailyBudget = typeof parsed.dailyBudget === 'number' ? parsed.dailyBudget : 0;
+                    state.notifHabitTime  = parsed.notifHabitTime  || '08:00';
+                    state.notifReflectTime = parsed.notifReflectTime || '21:00';
                 } catch (e) {
                     console.warn('Corrupted data in localStorage, starting fresh.', e);
                     localStorage.removeItem('atomicDisciplineData');
