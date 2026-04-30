@@ -2109,10 +2109,14 @@
 
             const totalCompletions = state.habits.reduce((sum, h) => sum + h.history.length, 0);
             const totalPossible = state.habits.reduce((sum, h) => {
-                const days = Math.floor((Date.now() - new Date(h.createdAt)) / (1000 * 60 * 60 * 24));
+                const createdDate = localDateStr(new Date(h.createdAt));
+                const today = localDateStr();
+                // Count calendar days from creation date to today (inclusive)
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const days = Math.round((new Date(today) - new Date(createdDate)) / msPerDay) + 1;
                 return sum + Math.max(days, 1);
             }, 0);
-            const rate = totalPossible > 0 ? Math.round((totalCompletions / totalPossible) * 100) : 0;
+            const rate = totalPossible > 0 ? Math.min(100, Math.round((totalCompletions / totalPossible) * 100)) : 0;
 
             document.getElementById('analytics-rate').textContent = `${rate}%`;
 
